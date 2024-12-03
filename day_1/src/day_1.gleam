@@ -2,7 +2,6 @@ import gleam/int
 import gleam/io
 import gleam/list
 import gleam/order.{Eq, Gt, Lt}
-import gleam/pair
 import gleam/result
 import gleam/string
 import simplifile
@@ -32,9 +31,7 @@ fn parse_input(input: String) -> List(#(Int, Int)) {
 fn find_distances(input: List(#(Int, Int))) -> List(Int) {
   let left_list =
     list.sort(input, by: fn(ta: #(Int, Int), tb: #(Int, Int)) {
-      let a = pair.first(ta)
-      let b = pair.first(tb)
-      case a, b {
+      case ta.0, tb.0 {
         a, b if a > b -> Gt
         a, b if a < b -> Lt
         _, _ -> Eq
@@ -44,9 +41,7 @@ fn find_distances(input: List(#(Int, Int))) -> List(Int) {
 
   let right_list =
     list.sort(input, by: fn(ta: #(Int, Int), tb: #(Int, Int)) {
-      let a = pair.second(ta)
-      let b = pair.second(tb)
-      case a, b {
+      case ta.1, tb.1 {
         a, b if a > b -> Gt
         a, b if a < b -> Lt
         _, _ -> Eq
