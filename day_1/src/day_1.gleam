@@ -1,7 +1,7 @@
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/order.{Eq, Gt, Lt}
+import gleam/pair
 import gleam/result
 import gleam/string
 import simplifile
@@ -15,41 +15,29 @@ pub fn main() {
   }
 }
 
-fn parse_input(input: String) -> List(#(Int, Int)) {
+fn parse_input(input: String) -> #(List(Int), List(Int)) {
+  let append_int = fn(num: String, positions: List(Int)) {
+    positions |> list.append([int.parse(num) |> result.unwrap(0)])
+  }
   string.split(input, on: "\n")
-  |> list.map(with: fn(line: String) {
+  |> list.fold(#([], []), with: fn(acc, line: String) {
     case string.split(line, on: "   ") {
-      [loc1, loc2] -> #(
-        int.parse(loc1) |> result.unwrap(0),
-        int.parse(loc2) |> result.unwrap(0),
-      )
-      _ -> #(0, 0)
+      [loc1, loc2] ->
+        acc
+        |> pair.map_first(append_int(loc1, _))
+        |> pair.map_second(append_int(loc2, _))
+      _ -> acc
     }
   })
 }
 
-fn find_distances(input: List(#(Int, Int))) -> List(Int) {
-  let left_list =
-    list.sort(input, by: fn(ta: #(Int, Int), tb: #(Int, Int)) {
-      case ta.0, tb.0 {
-        a, b if a > b -> Gt
-        a, b if a < b -> Lt
-        _, _ -> Eq
-      }
-    })
-    |> list.map(fn(t: #(Int, Int)) { t.0 })
+fn find_distances(input: #(List(Int), List(Int))) -> List(Int) {
+  let tuple =
+    input
+    |> pair.map_first(fn(positions) { list.sort(positions, by: int.compare) })
+    |> pair.map_second(fn(positions) { list.sort(positions, by: int.compare) })
 
-  let right_list =
-    list.sort(input, by: fn(ta: #(Int, Int), tb: #(Int, Int)) {
-      case ta.1, tb.1 {
-        a, b if a > b -> Gt
-        a, b if a < b -> Lt
-        _, _ -> Eq
-      }
-    })
-    |> list.map(fn(t: #(Int, Int)) { t.1 })
-
-  list.zip(left_list, right_list)
+  list.zip(pair.first(tuple), pair.second(tuple))
   |> list.map(fn(t: #(Int, Int)) { int.absolute_value(t.0 - t.1) })
 }
 
