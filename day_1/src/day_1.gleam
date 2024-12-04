@@ -38,12 +38,12 @@ fn parse_input(input: String) -> #(List(Int), List(Int)) {
 }
 
 fn find_distances(input: #(List(Int), List(Int))) -> List(Int) {
-  let tuple =
+  let #(a, b) =
     input
     |> pair.map_first(fn(positions) { list.sort(positions, by: int.compare) })
     |> pair.map_second(fn(positions) { list.sort(positions, by: int.compare) })
 
-  list.zip(tuple.0, tuple.1)
+  list.zip(a, b)
   |> list.map(fn(t: #(Int, Int)) { int.absolute_value(t.0 - t.1) })
 }
 
