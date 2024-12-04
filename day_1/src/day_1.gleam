@@ -1,3 +1,5 @@
+import gleam/dict
+import gleam/function
 import gleam/int
 import gleam/io
 import gleam/list
@@ -9,8 +11,12 @@ import simplifile
 pub fn main() {
   let input = simplifile.read("./input.txt")
   case input {
-    Ok(val) ->
-      parse_input(val) |> find_distances |> find_total_distance |> io.println
+    Ok(val) -> {
+      let input = parse_input(val)
+      let pt1 = input |> find_distances |> find_total
+      let pt2 = input |> find_similarities |> find_total
+      io.println("Pt1: " <> pt1 <> " Pt2: " <> pt2)
+    }
     Error(_) -> io.println("KO!")
   }
 }
@@ -37,11 +43,25 @@ fn find_distances(input: #(List(Int), List(Int))) -> List(Int) {
     |> pair.map_first(fn(positions) { list.sort(positions, by: int.compare) })
     |> pair.map_second(fn(positions) { list.sort(positions, by: int.compare) })
 
-  list.zip(pair.first(tuple), pair.second(tuple))
+  list.zip(tuple.0, tuple.1)
   |> list.map(fn(t: #(Int, Int)) { int.absolute_value(t.0 - t.1) })
 }
 
-fn find_total_distance(input: List(Int)) -> String {
+fn find_similarities(input: #(List(Int), List(Int))) -> List(Int) {
+  let cache = dict.new()
+  input.0
+  |> list.map(fn(num: Int) {
+    cache
+    |> dict.get(num)
+    |> result.lazy_unwrap(fn() {
+      input.1 |> list.filter(fn(n) { n == num }) |> list.length
+    })
+    |> function.tap(fn(n) { dict.insert(cache, num, n) })
+    |> fn(n) { n * num }
+  })
+}
+
+fn find_total(input: List(Int)) -> String {
   input
   |> list.fold(0, fn(acc, x) { acc + x })
   |> int.to_string
