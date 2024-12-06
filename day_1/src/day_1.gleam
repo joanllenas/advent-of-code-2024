@@ -12,9 +12,9 @@ pub fn main() {
   let input = simplifile.read("./input.txt")
   case input {
     Ok(val) -> {
-      let input = parse_input(val)
-      let pt1 = input |> find_distances |> find_total
-      let pt2 = input |> find_similarities |> find_total
+      let res = parse_input(val)
+      let pt1 = res |> find_distances |> find_total
+      let pt2 = res |> find_similarities |> find_total
       io.println("Pt1: " <> pt1 <> " Pt2: " <> pt2)
     }
     Error(_) -> io.println("KO!")
