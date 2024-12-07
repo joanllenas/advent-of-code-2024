@@ -1,6 +1,6 @@
 import gleam/int
 import gleam/io
-import gleam/list.{Continue, Stop}
+import gleam/list
 import gleam/result
 import gleam/string
 import simplifile
@@ -39,44 +39,25 @@ pub type ReportStatus {
   StatusUnsafe
 }
 
-pub type SequenceType {
-  Increment(Int)
-  Decrement(Int)
-  First(Int)
-  Neither
+fn diffs(report: List(Int)) -> List(Int) {
+  report
+  |> list.window_by_2()
+  |> list.map(fn(tuple) { tuple.1 - tuple.0 })
 }
 
 pub fn calculate_report_safety(report: List(Int)) -> ReportStatus {
-  list.fold_until(report, Neither, fn(previous, current) {
-    case previous {
-      Neither -> Continue(First(current))
-
-      First(prev)
-        if current > prev && current - prev >= 1 && current - prev <= 3
-      -> Continue(Increment(current))
-
-      First(prev)
-        if current < prev && prev - current >= 1 && prev - current <= 3
-      -> Continue(Decrement(current))
-
-      Increment(prev)
-        if current > prev && current - prev >= 1 && current - prev <= 3
-      -> Continue(Increment(current))
-
-      Decrement(prev)
-        if current < prev && prev - current >= 1 && prev - current <= 3
-      -> Continue(Decrement(current))
-
-      _ -> {
-        Stop(Neither)
-      }
-    }
-  })
-  |> fn(res: SequenceType) {
-    case res {
-      Neither -> StatusUnsafe
-      _ -> StatusSafe
-    }
+  let diffs = diffs(report)
+  let all_increasing = diffs |> list.all(fn(n) { n > 0 })
+  let all_decreasing = diffs |> list.all(fn(n) { n < 0 })
+  let diffs_within_bounds =
+    diffs
+    |> list.all(fn(n) {
+      int.absolute_value(n) >= 1 && int.absolute_value(n) <= 3
+    })
+  let is_safe = { all_increasing || all_decreasing } && diffs_within_bounds
+  case is_safe {
+    True -> StatusSafe
+    False -> StatusUnsafe
   }
 }
 
