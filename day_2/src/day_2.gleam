@@ -10,9 +10,13 @@ pub fn main() {
   case input {
     Ok(val) -> {
       let res = parse_input(val)
-      let pt1 = res |> calculate_reports_safety |> find_total
-      let pt2 = "TODO"
-      io.println("Pt1: " <> int.to_string(pt1) <> " Pt2: " <> pt2)
+      let pt1 =
+        res |> calculate_reports_safety(with_tolerance: False) |> find_total
+      let pt2 =
+        res |> calculate_reports_safety(with_tolerance: True) |> find_total
+      io.println(
+        "Pt1: " <> int.to_string(pt1) <> " Pt2: " <> int.to_string(pt2),
+      )
     }
     Error(_) -> io.println("KO!")
   }
@@ -61,12 +65,35 @@ pub fn calculate_report_safety(report: List(Int)) -> ReportStatus {
   }
 }
 
-pub fn calculate_reports_safety(reports: List(List(Int))) -> List(ReportStatus) {
+pub fn calculate_report_safety_with_tolerance(report: List(Int)) -> ReportStatus {
+  list.index_map(report, fn(_, index) {
+    list.index_fold(report, [], fn(acc, item, idx) {
+      case index == idx {
+        True -> acc
+        False -> list.append(acc, [item])
+      }
+    })
+    |> calculate_report_safety
+  })
+  |> list.any(fn(status) { status == StatusSafe })
+  |> fn(all_safe) {
+    case all_safe {
+      True -> StatusSafe
+      False -> StatusUnsafe
+    }
+  }
+}
+
+pub fn calculate_reports_safety(
+  reports: List(List(Int)),
+  with_tolerance has_tolerance: Bool,
+) -> List(ReportStatus) {
   list.map(reports, with: fn(report: List(Int)) {
-    case report {
-      [] -> StatusUnsafe
-      [_] -> StatusUnsafe
-      rep -> calculate_report_safety(rep)
+    case report, has_tolerance {
+      [], _ -> StatusUnsafe
+      [_], _ -> StatusUnsafe
+      rep, False -> calculate_report_safety(rep)
+      rep, True -> calculate_report_safety_with_tolerance(rep)
     }
   })
 }
